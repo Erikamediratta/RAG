@@ -1,4 +1,3 @@
-from sentence_transformers import SentenceTransformer
 
 #Lazy loading the model so that web server is started succesfully before model is loaded
 #solves memory issues on render deployment
@@ -6,6 +5,8 @@ model=None
 def get_model():
     global model
     if model is None:
+        from sentence_transformers import SentenceTransformer
+
         model=SentenceTransformer("all-MiniLM-L6-v2")
     return model
 

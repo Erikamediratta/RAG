@@ -3,11 +3,8 @@ import asyncio
 import httpx
 from dotenv import load_dotenv
 load_dotenv()
-from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
 
-from google import genai
-from google.genai import types
+
 
 
 GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/"
@@ -35,6 +32,11 @@ def clean_schema(schema):
     return cleaned
 
 async def run(question):
+    from mcp import ClientSession
+    from mcp.client.streamable_http import streamablehttp_client
+
+    from google import genai
+    from google.genai import types
     async with streamablehttp_client(
         GITHUB_MCP_URL,
         headers={"Authorization":f"Bearer {GITHUB_PAT}"}

@@ -4,6 +4,10 @@ A document Q&A system that routes questions between two agents based on confiden
 - **Sub-agent**: answers grounded in a locally embedded document (RAG via Supabase + pgvector)
 - **Tool agent**: falls back to real GitHub tool access via MCP when document search confidence is low
 
+  ## Live Demo-
+  https://rag-gipf.onrender.com
+  
+
 ## Stack
 Python · FastAPI · LangGraph · Supabase (pgvector) · Gemini API · sentence-transformers (local embeddings) · MCP (GitHub server)
 

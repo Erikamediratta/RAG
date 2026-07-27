@@ -5,7 +5,7 @@ from .sub_agent import sub_agent_node
 from .tool_agent import tool_agent_node
 
 def decide_next(state):
-    if state["top_score"]<0.5:
+    if state["top_score"]<0.72:
         return "tool_agent"
     return "sub_agent"
 graph = StateGraph(GraphState)

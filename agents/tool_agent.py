@@ -31,7 +31,15 @@ def clean_schema(schema):
             cleaned[key] = value
     return cleaned
 
-async def run(question):
+async def run(question,chat_history=None):
+    history_text=""
+    if chat_history:
+        for turn in chat_history:
+            history_text=history_text+f"{turn['role']}:{turn['content']}\n"
+
+    contextual_question=question
+    if history_text:
+        contextual_question=f"Previous conversation:\n {history_text}\n Current Question :{question}"
     from mcp import ClientSession
     from mcp.client.streamable_http import streamablehttp_client
 
@@ -115,7 +123,7 @@ async def run(question):
                 return response.text
 
 def tool_agent_node(state):
-    answer = asyncio.run(run(state["question"]))
+    answer = asyncio.run(run(state["question"],state.get("chat_history")))
     return {"answer": answer}
 
 

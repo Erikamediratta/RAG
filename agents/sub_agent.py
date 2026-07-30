@@ -6,7 +6,7 @@ from google import genai
 
 client=genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-def generate_answer(question,chunks):
+def generate_answer(question,chunks,chat_history=None):
     context=""
     for c in chunks:
         context=context+ c["chunk_text"]

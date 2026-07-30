@@ -8,9 +8,21 @@ from db import supabase
 from pdf_extract import extract
 from text_splitter import split_documents
 from embeddings import generate_embedding
+from pinecone import Pinecone
 
+pc=Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+index=pc.Index(os.environ["PINECONE_INDEX_NAME"])
 pdf_folder = "pdfs"
 
+def upsert_with_retry(vectors,max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            index.upsert(vectors=vectors)
+            return
+        except Exception as e:
+            print(f"Upsert failed :{e}")
+            time.sleep(3)
+    print(f"Failed after {max_retries} attempts")
 
 
 for file in os.listdir(pdf_folder):
@@ -34,25 +46,28 @@ for file in os.listdir(pdf_folder):
     # generate embeddings for each chunk and insert it
     for i, chunk in enumerate(chunks):
         print(f"  Embedding chunk {i}...")
-        try:
-            embedding = generate_embedding(chunk.page_content)
+        
+        embedding = generate_embedding(chunk.page_content)
 
-        except Exception as e:
-            print(f"  ERROR on chunk {i}: {e}")
-            break
+        
 
-        supabase.table("document_chunks").insert({
-            "document_name": chunk.metadata["source"],
-            "chunk_text": chunk.page_content,
-            "chunk_index": i,
-            "embedding": embedding,
-            "storage_path": file
-        }).execute()
+        vector_record={
+            "id":f"{file}-chunk-{i}",
+            "values":embedding,
+            "metadata":{
+                "document_name":chunk.metadata["source"],
+                "chunk_text":chunk.page_content,
+                "chunk_index":i,
+
+            }
+
+        }
+        upsert_with_retry([vector_record])
 
         if i % 100 == 0:
             print(f"  Inserted chunk {i}/{len(chunks)}")
 
     print(f"Done with file, {file}")
-    break
+
     
 

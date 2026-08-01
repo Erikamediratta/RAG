@@ -1,0 +1,20 @@
+{
+  "employees": [
+    {"employee_id": "E001", "name": "Priya Sharma", "department": "Engineering", "email": "priya.sharma@company.com"},
+    {"employee_id": "E002", "name": "Tom Reilly", "department": "Sales", "email": "tom.reilly@company.com"},
+    {"employee_id": "E003", "name": "Aisha Khan", "department": "IT Support", "email": "aisha.khan@company.com"},
+    {"employee_id": "E004", "name": "Marco Silva", "department": "Finance", "email": "marco.silva@company.com"}
+  ],
+  "assets": [
+    {"asset_id": "A100", "type": "Laptop", "model": "Dell Latitude 5440", "assigned_to": "E001", "status": "Active"},
+    {"asset_id": "A101", "type": "Laptop", "model": "MacBook Pro 14", "assigned_to": "E002", "status": "Active"},
+    {"asset_id": "A102", "type": "Monitor", "model": "Dell U2723QE", "assigned_to": "E001", "status": "Active"},
+    {"asset_id": "A103", "type": "Laptop", "model": "Dell Latitude 5440", "assigned_to": "E004", "status": "Retired"}
+  ],
+  "tickets": [
+    {"ticket_id": "T500", "employee_id": "E001", "subject": "Account locked out after password reset", "status": "Open", "created_date": "2026-07-28"},
+    {"ticket_id": "T501", "employee_id": "E002", "subject": "VPN connection drops intermittently", "status": "Open", "created_date": "2026-07-29"},
+    {"ticket_id": "T502", "employee_id": "E001", "subject": "Request for second monitor", "status": "Closed", "created_date": "2026-06-15"},
+    {"ticket_id": "T503", "employee_id": "E004", "subject": "Laptop replacement request", "status": "Closed", "created_date": "2026-05-02"}
+  ]
+}

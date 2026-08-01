@@ -16,7 +16,7 @@ app=FastAPI()
 @app.post("/api/chat")
 def chat(data:dict):
     result=compiled_graph.invoke({"question":data["message"],"chat_history":data.get("chat_history",[])})
-    return {"response":result["answer"]}
+    return {"response":result["answer"],"decision_trace":result.get("decision_trace",[])}
 
 
 @app.get("/api/documents")

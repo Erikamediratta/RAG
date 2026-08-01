@@ -28,7 +28,3 @@ def get_chunks(user_question, chunk_count=8):
             "similarity": match["score"]
         })
     return chunks
-def router_node(state):
-    chunks = get_chunks(state["question"])
-    top_score=chunks[0]["similarity"] if chunks else 0
-    return {"chunks": chunks,"top_score":top_score}

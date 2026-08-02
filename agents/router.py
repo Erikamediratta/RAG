@@ -1,30 +1,39 @@
-import os 
-
+import os
 from dotenv import load_dotenv
 load_dotenv()
-from pinecone import Pinecone
+
+from qdrant_client import QdrantClient
 from embeddings import generate_embedding
 
-pc=Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index=pc.Index(os.environ["PINECONE_INDEX_NAME"])
+client = QdrantClient(
+    url=os.environ["QDRANT_URL_NAME"],
+    api_key=os.environ["QDRANT_API_KEY"]
+)
 
-from embeddings import generate_embedding
 
 def get_chunks(user_question, chunk_count=8):
-    user_query=generate_embedding(user_question)
+    user_query = generate_embedding(user_question)
 
-    result=index.query(
-        vector=user_query,
-        top_k=chunk_count,
-        include_metadata=True
-    )
+    results = client.query_points(
+        collection_name="documents",
+        query=user_query,
+        limit=chunk_count,
+        with_payload=True
+    ).points
 
-
-    chunks=[]
-    for match in result["matches"]:
+    chunks = []
+    for point in results:
         chunks.append({
-            "document_name": match["metadata"]["document_name"],
-            "chunk_text": match["metadata"]["chunk_text"],
-            "similarity": match["score"]
+            "document_name": point.payload["document_name"],
+            "chunk_text": point.payload["chunk_text"],
+            "similarity": point.score
         })
     return chunks
+
+
+def router_node(state):
+    chunks = get_chunks(state["question"])
+    top_score = chunks[0]["similarity"] if chunks else 0
+    return {"chunks": chunks, "top_score": top_score}
+
+

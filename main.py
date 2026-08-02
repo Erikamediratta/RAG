@@ -6,10 +6,10 @@ from fastapi import UploadFile, File
 import shutil
 #shutil is python library to copy an uploaded file's contents to disk
 from ingestion import ingest_documents
-from pinecone import Pinecone
+
 import os
-pc=Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index=pc.index(os.environ["PINECONE_INDEX_NAME"])
+from qdrant_client import QdrantClient
+client = QdrantClient(url=os.environ["QDRANT_URL_NAME"], api_key=os.environ["QDRANT_API_KEY"])
 app=FastAPI()
 
 
@@ -30,7 +30,8 @@ async def create_document(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    chunk_count = ingest_documents(file_path, file.filename, index, supabase)
+    chunk_count = ingest_documents(file_path, file.filename, client, supabase)
     return {"status": "success", "document_name": file.filename, "chunks_added": chunk_count}
 
 app.mount("/",StaticFiles(directory="static",html=True),name="static")
+

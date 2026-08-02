@@ -8,16 +8,22 @@ from db import supabase
 from pdf_extract import extract
 from text_splitter import split_documents
 from embeddings import generate_embedding
-from pinecone import Pinecone
+from qdrant_client import QdrantClient
+from qdrant_client.models import PointStruct
 
-pc=Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index=pc.Index(os.environ["PINECONE_INDEX_NAME"])
+client = QdrantClient(
+    url=os.environ["QDRANT_URL_NAME"],
+    api_key=os.environ["QDRANT_API_KEY"]
+)
+
+
 pdf_folder = "pdfs"
 
-def upsert_with_retry(vectors,max_retries=3):
+def upsert_with_retry(points,max_retries=3):
     for attempt in range(max_retries):
         try:
-            index.upsert(vectors=vectors)
+            client.upsert(collection_name="documents",points=points)
+
             return
         except Exception as e:
             print(f"Upsert failed :{e}")
@@ -45,24 +51,19 @@ for file in os.listdir(pdf_folder):
 
     # generate embeddings for each chunk and insert it
     for i, chunk in enumerate(chunks):
-        print(f"  Embedding chunk {i}...")
-        
         embedding = generate_embedding(chunk.page_content)
 
-        
-
-        vector_record={
-            "id":f"{file}-chunk-{i}",
-            "values":embedding,
-            "metadata":{
-                "document_name":chunk.metadata["source"],
-                "chunk_text":chunk.page_content,
-                "chunk_index":i,
-
+        point = PointStruct(
+            id=i + hash(file) % 1000000000,
+            vector=embedding,
+            payload={
+                "document_name": chunk.metadata["source"],
+                "chunk_text": chunk.page_content,
+                "chunk_index": i,
             }
+        )
+        upsert_with_retry([point])
 
-        }
-        upsert_with_retry([vector_record])
 
         if i % 100 == 0:
             print(f"  Inserted chunk {i}/{len(chunks)}")

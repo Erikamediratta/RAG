@@ -15,7 +15,7 @@ app=FastAPI()
 
 @app.post("/api/chat")
 def chat(data:dict):
-    result=compiled_graph.invoke({"question":data["message"],"chat_history":data.get("chat_history",[])})
+    result=compiled_graph.invoke({"question":data["message"],"chat_history":data.get("chat_history",[]),"document_filter":data.get("document_filter")})
     return {"response":result["answer"],"decision_trace":result.get("decision_trace",[])}
 
 
@@ -33,5 +33,27 @@ async def create_document(file: UploadFile = File(...)):
     chunk_count = ingest_documents(file_path, file.filename, client, supabase)
     return {"status": "success", "document_name": file.filename, "chunks_added": chunk_count}
 
+from ingestion import embed_document
+
+@app.post("/api/documents/upload")
+async def upload_document(file: UploadFile = File(...)):
+    file_path = f"pdfs/{file.filename}"
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    supabase.table("documents").upsert({
+        "document_name": file.filename,
+        "chunk_count": 0,
+        "status": "uploaded"
+    }, on_conflict="document_name").execute()
+
+    return {"status": "success", "document_name": file.filename}
+
+
+@app.post("/api/documents/{document_name}/embed")
+def embed_document_endpoint(document_name: str):
+    file_path = f"pdfs/{document_name}"
+    chunk_count = embed_document(file_path, document_name, client, supabase)
+    return {"status": "embedded", "document_name": document_name, "chunks_added": chunk_count}
 app.mount("/",StaticFiles(directory="static",html=True),name="static")
 

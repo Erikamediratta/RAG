@@ -3,19 +3,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams
 from qdrant_client.models import PayloadSchemaType
-client=QdrantClient(
+
+client = QdrantClient(
     url=os.environ["QDRANT_URL_NAME"],
     api_key=os.environ["QDRANT_API_KEY"]
 )
-client.create_collection(
-    collection_name="documents",
-    vectors_config=VectorParams(size=384, distance=Distance.COSINE)
-)
+
 client.create_payload_index(
     collection_name="documents",
     field_name="document_name",
     field_schema=PayloadSchemaType.KEYWORD
-
 )

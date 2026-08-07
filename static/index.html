@@ -134,6 +134,8 @@
     <nav class="hidden"></nav>
 
     <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedDoc = urlParams.get("doc");
     const chatCanvas = document.getElementById("chat-canvas");
     const chatInput = document.getElementById("chat-input");
     const sendBtn = document.getElementById("send-btn");
@@ -199,7 +201,7 @@
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: question,chat_history:chatHistory })
+                body: JSON.stringify({ message: question,chat_history:chatHistory,document_filter:selectedDoc })
             });
             const data = await res.json();
             removeThinking();

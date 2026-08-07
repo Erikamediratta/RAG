@@ -7,10 +7,12 @@
 from agents.router import get_chunks
 
 
-def search_docs(query, count=5):
+def search_docs(query, count=5,document_filter=None):
     try:
-        chunks = get_chunks(query, chunk_count=count)
+        chunks = get_chunks(query, chunk_count=count,document_filter=document_filter)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {"found": False, "message": f"Document search failed: {e}"}
 
     if not chunks:

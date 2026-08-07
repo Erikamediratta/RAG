@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Documents</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; background: #0e0e10; color: #e5e1e4; }
+        .sidebar { width: 280px; background: #131315; border-right: 1px solid #333; padding: 20px; overflow-y: auto; }
+        .sidebar h3 { font-size: 13px; color: #888; text-transform: uppercase; margin-bottom: 10px; }
+        input[type=file] { color: #e5e1e4; margin-bottom: 10px; display: block; }
+        button { background: #facc15; color: #000; border: none; padding: 8px 14px; cursor: pointer; border-radius: 4px; font-size: 13px; }
+        #upload-message { font-size: 12px; color: #aaa; }
+
+        .doc-item { padding: 10px; margin-bottom: 8px; background: #1c1b1d; border-radius: 6px; }
+        .doc-name { font-weight: bold; display: block; margin-bottom: 4px; }
+        .doc-status { font-size: 11px; color: #888; display: block; margin-bottom: 6px; }
+        .doc-name.clickable { cursor: pointer; color: #facc15; }
+        .doc-name.clickable:hover { text-decoration: underline; }
+
+        .main { flex: 1; padding: 40px; display: flex; align-items: center; justify-content: center; }
+        .main h2 { color: #888; font-weight: normal; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h3>Upload a Document</h3>
+        <input type="file" id="file-input">
+        <button onclick="uploadFile()">Upload</button>
+        <p id="upload-message"></p>
+
+        <h3 style="margin-top:30px;">Your Documents</h3>
+        <div id="document-list"></div>
+    </div>
+
+    <div class="main">
+        <h2>Click an embedded document to start chatting about it</h2>
+    </div>
+
+    <script>
+        async function loadDocuments() {
+            const response = await fetch("/api/documents");
+            const data = await response.json();
+
+            const listDiv = document.getElementById("document-list");
+            listDiv.innerHTML = "";
+
+            for (const doc of data.documents) {
+                const item = document.createElement("div");
+                item.className = "doc-item";
+
+                if (doc.status === "embedded") {
+                    item.innerHTML = `
+                        <span class="doc-name clickable" onclick="goToChat('${doc.document_name}')">${doc.document_name}</span>
+                        <span class="doc-status">embedded (${doc.chunk_count || 0} chunks) — click to chat</span>
+                    `;
+                } else {
+                    item.innerHTML = `
+                        <span class="doc-name">${doc.document_name}</span>
+                        <span class="doc-status">uploaded, not embedded</span>
+                        <button onclick="embedFile('${doc.document_name}')">Embed</button>
+                    `;
+                }
+
+                listDiv.appendChild(item);
+            }
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById("file-input");
+            const file = fileInput.files[0];
+            if (!file) { document.getElementById("upload-message").innerText = "Choose a file first."; return; }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            document.getElementById("upload-message").innerText = "Uploading...";
+
+            const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+
+            if (!res.ok) {
+                document.getElementById("upload-message").innerText = "Upload failed.";
+                return;
+            }
+
+            document.getElementById("upload-message").innerText = "Uploaded.";
+            loadDocuments();
+        }
+
+        async function embedFile(name) {
+            document.getElementById("upload-message").innerText = "Embedding " + name + "... this may take a while.";
+
+            const res = await fetch("/api/documents/" + encodeURIComponent(name) + "/embed", { method: "POST" });
+
+            if (!res.ok) {
+                document.getElementById("upload-message").innerText = "Embedding failed.";
+                return;
+            }
+
+            document.getElementById("upload-message").innerText = "Done embedding " + name;
+            loadDocuments();
+        }
+
+        function goToChat(name) {
+            window.location.href = "/index.html?doc=" + encodeURIComponent(name);
+        }
+
+        loadDocuments();
+    </script>
+
+</body>
+</html>

@@ -5,3 +5,4 @@ class GraphState(TypedDict):
     answer: str
     chat_history: List[dict]
     decision_trace: List[dict]
+    document_filter:str

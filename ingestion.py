@@ -8,6 +8,9 @@ from qdrant_client.models import PointStruct
 
 
 def embed_document(pdf_path, filename, client, supabase):
+    doc_row = supabase.table("documents").select("user_id").eq("document_name", filename).execute()
+    user_id = doc_row.data[0]["user_id"] if doc_row.data else None
+
     text = extract(pdf_path)
     chunks = split_documents(text, filename)
 
@@ -20,9 +23,11 @@ def embed_document(pdf_path, filename, client, supabase):
                 "document_name": chunk_item.metadata["source"],
                 "chunk_text": chunk_item.page_content,
                 "chunk_index": i,
+                "user_id": user_id,
             }
         )
         client.upsert(collection_name="documents", points=[point])
+
 
     supabase.table("documents").update({
         "chunk_count": len(chunks),

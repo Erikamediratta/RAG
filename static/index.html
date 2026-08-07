@@ -134,6 +134,15 @@
     <nav class="hidden"></nav>
 
     <script>
+    function getUserId() {
+    let userId = localStorage.getItem("user_id");
+    if (!userId) {
+        userId = "user-" + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("user_id", userId);
+    }
+    return userId;
+}
+const userId = getUserId();
     const urlParams = new URLSearchParams(window.location.search);
     const selectedDoc = urlParams.get("doc");
     const chatCanvas = document.getElementById("chat-canvas");
@@ -201,7 +210,7 @@
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: question,chat_history:chatHistory,document_filter:selectedDoc })
+                body: JSON.stringify({ message: question,chat_history:chatHistory,document_filter:selectedDoc,user_id:userId })
             });
             const data = await res.json();
             removeThinking();

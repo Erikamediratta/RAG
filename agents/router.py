@@ -4,22 +4,25 @@ load_dotenv()
 
 from qdrant_client import QdrantClient
 from embeddings import generate_embedding
-from qdrant_client.models import Filter,FieldCondition,MatchValue
+from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 client = QdrantClient(
-    url=os.environ["QDRANT_URL_NAME"],
+    url=os.environ["QDRANT_URL"],
     api_key=os.environ["QDRANT_API_KEY"]
 )
 
 
-def get_chunks(user_question, chunk_count=8,document_filter=None):
+def get_chunks(user_question, chunk_count=8, document_filter=None, user_id=None):
     user_query = generate_embedding(user_question)
 
-    qdrant_filter=None
+    conditions = []
     if document_filter:
-        qdrant_filter=Filter(
-            must=[FieldCondition(key="document_name",match=MatchValue(value=document_filter))]
-        )
+        conditions.append(FieldCondition(key="document_name", match=MatchValue(value=document_filter)))
+    if user_id:
+        conditions.append(FieldCondition(key="user_id", match=MatchValue(value=user_id)))
+
+    qdrant_filter = Filter(must=conditions) if conditions else None
+
     results = client.query_points(
         collection_name="documents",
         query=user_query,
@@ -39,8 +42,10 @@ def get_chunks(user_question, chunk_count=8,document_filter=None):
 
 
 def router_node(state):
-    chunks = get_chunks(state["question"],document_filter=state.get("document_filter"))
+    chunks = get_chunks(
+        state["question"],
+        document_filter=state.get("document_filter"),
+        user_id=state.get("user_id")
+    )
     top_score = chunks[0]["similarity"] if chunks else 0
     return {"chunks": chunks, "top_score": top_score}
-
-

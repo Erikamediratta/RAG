@@ -2,14 +2,14 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from agents.graph import compiled_graph
 from db import supabase
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File,Form
 import shutil
 #shutil is python library to copy an uploaded file's contents to disk
 from ingestion import ingest_documents
 
 import os
 from qdrant_client import QdrantClient
-client = QdrantClient(url=os.environ["QDRANT_URL_NAME"], api_key=os.environ["QDRANT_API_KEY"])
+client = QdrantClient(url=os.environ["QDRANT_URL"], api_key=os.environ["QDRANT_API_KEY"])
 app=FastAPI()
 
 
@@ -20,8 +20,12 @@ def chat(data:dict):
 
 
 @app.get("/api/documents")
-def list_documents():
-    result = supabase.table("documents").select("*").execute()
+def list_documents(user_id:str=None):
+    query=supabase.table("documents").select("*")
+    if user_id:
+        query=query.eq("user_id",user_id)
+
+    result=query.execute()
     return {"documents": result.data}
 
 @app.post("/api/documents")
@@ -36,7 +40,7 @@ async def create_document(file: UploadFile = File(...)):
 from ingestion import embed_document
 
 @app.post("/api/documents/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(file: UploadFile = File(...),user_id:str= Form(...)):
     file_path = f"pdfs/{file.filename}"
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
@@ -44,7 +48,8 @@ async def upload_document(file: UploadFile = File(...)):
     supabase.table("documents").upsert({
         "document_name": file.filename,
         "chunk_count": 0,
-        "status": "uploaded"
+        "status": "uploaded",
+        "user_id": user_id
     }, on_conflict="document_name").execute()
 
     return {"status": "success", "document_name": file.filename}

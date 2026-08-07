@@ -38,8 +38,17 @@
     </div>
 
     <script>
+        function getUserId() {
+    let userId = localStorage.getItem("user_id");
+    if (!userId) {
+        userId = "user-" + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("user_id", userId);
+    }
+    return userId;
+}
+const userId = getUserId();
         async function loadDocuments() {
-            const response = await fetch("/api/documents");
+            const response = await fetch("/api/documents?user_id="+encodeURIComponent(userId));
             const data = await response.json();
 
             const listDiv = document.getElementById("document-list");
@@ -73,6 +82,7 @@
 
             const formData = new FormData();
             formData.append("file", file);
+            formData.append("user_id",userId)
 
             document.getElementById("upload-message").innerText = "Uploading...";
 

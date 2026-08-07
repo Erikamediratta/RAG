@@ -41,6 +41,7 @@ from ingestion import embed_document
 
 @app.post("/api/documents/upload")
 async def upload_document(file: UploadFile = File(...),user_id:str= Form(...)):
+    os.makedirs("pdfs", exist_ok=True)
     file_path = f"pdfs/{file.filename}"
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
@@ -57,6 +58,7 @@ async def upload_document(file: UploadFile = File(...),user_id:str= Form(...)):
 
 @app.post("/api/documents/{document_name}/embed")
 def embed_document_endpoint(document_name: str):
+    os.makedirs("pdfs", exist_ok=True)
     file_path = f"pdfs/{document_name}"
     chunk_count = embed_document(file_path, document_name, client, supabase)
     return {"status": "embedded", "document_name": document_name, "chunks_added": chunk_count}
